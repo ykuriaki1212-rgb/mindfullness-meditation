@@ -497,7 +497,7 @@
         // 例: 'https://script.google.com/macros/s/AKfycbx.../exec'
         
         // API URLが設定されているかチェック
-        if (API_URL === 'https://script.google.com/macros/s/AKfycbzwLPNqqJt8ng7IQwWSzRFv371VCwiWoO6ckUThrZPcuGiOh_dUhTYHtA1zQYIP0lZ4qg/exec') {
+        if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
             document.getElementById('configNotice').style.display = 'block';
         }
 
@@ -585,7 +585,7 @@
 
         // Googleスプレッドシートからデータを読み込み
         async function loadDataFromSheet() {
-            if (API_URL === 'https://script.google.com/macros/s/AKfycbzwLPNqqJt8ng7IQwWSzRFv371VCwiWoO6ckUThrZPcuGiOh_dUhTYHtA1zQYIP0lZ4qg/exec') {
+            if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                 alert('⚠️ Google Apps ScriptのURLが設定されていません。\nHTMLファイル内の「API_URL」を設定してください。');
                 return;
             }
@@ -645,7 +645,7 @@
                 return;
             }
 
-            if (API_URL === 'https://script.google.com/macros/s/AKfycbzwLPNqqJt8ng7IQwWSzRFv371VCwiWoO6ckUThrZPcuGiOh_dUhTYHtA1zQYIP0lZ4qg/exec') {
+            if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                 alert('⚠️ Google Apps ScriptのURLが設定されていません。\nHTMLファイル内の「API_URL」を設定してください。');
                 return;
             }
