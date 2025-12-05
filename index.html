@@ -583,8 +583,8 @@
             status.style.color = textColor;
         }
 
-        // Googleスプレッドシートからデータを読み込み
-        async function loadDataFromSheet() {
+        // Googleスプレッドシートからデータを読み込み（JSONP方式でCORS回避）
+        function loadDataFromSheet() {
             if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                 alert('⚠️ Google Apps ScriptのURLが設定されていません。\nHTMLファイル内の「API_URL」を設定してください。');
                 return;
@@ -593,46 +593,52 @@
             showLoading(true);
             showSaveStatus('🔄 データ読み込み中...', '#bee3f8', '#2c5282');
 
-            try {
-                const response = await fetch(`${API_URL}?action=getData`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
+            // ユニークなコールバック関数名を生成
+            const callbackName = 'jsonpCallback_' + Date.now();
+            
+            // グローバルスコープにコールバック関数を定義
+            window[callbackName] = function(result) {
+                try {
+                    if (result.success) {
+                        // データを更新
+                        dashboardData.members = result.members;
+                        dashboardData.weeklyData = result.weeklyData;
+                        dashboardData.effectData = result.effectData;
+
+                        // UIを更新
+                        updateDashboard();
+                        updateCharts();
+
+                        showSaveStatus('✅ データ読み込み完了', '#c6f6d5', '#22543d');
+                    } else {
+                        throw new Error(result.error || 'データの読み込みに失敗しました');
                     }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                } catch (error) {
+                    console.error('データ読み込みエラー:', error);
+                    showSaveStatus('⚠️ 読み込み失敗', '#fed7d7', '#742a2a');
+                    alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message);
+                } finally {
+                    // クリーンアップ
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    showLoading(false);
                 }
+            };
 
-                const result = await response.json();
-
-                if (result.success) {
-                    // データを更新
-                    dashboardData.members = result.members;
-                    dashboardData.weeklyData = result.weeklyData;
-                    dashboardData.effectData = result.effectData;
-
-                    // UIを更新
-                    updateDashboard();
-                    updateCharts();
-
-                    showSaveStatus('✅ データ読み込み完了', '#c6f6d5', '#22543d');
-                } else {
-                    throw new Error(result.error || 'データの読み込みに失敗しました');
-                }
-
-            } catch (error) {
-                console.error('データ読み込みエラー:', error);
+            // scriptタグを動的に作成してJSONPリクエスト
+            const script = document.createElement('script');
+            script.src = `${API_URL}?action=getData&callback=${callbackName}`;
+            script.onerror = function() {
                 showSaveStatus('⚠️ 読み込み失敗', '#fed7d7', '#742a2a');
-                alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message + '\n\nブラウザのコンソール(F12)で詳細を確認してください。');
-            } finally {
+                alert('スクリプトの読み込みに失敗しました。\nURLを確認してください。');
+                delete window[callbackName];
                 showLoading(false);
-            }
+            };
+            document.body.appendChild(script);
         }
 
-        // セッション追加機能
-        async function addSession() {
+        // セッション追加機能（JSONP方式でCORS回避）
+        function addSession() {
             const member = document.getElementById('memberSelect').value;
             const minutes = parseInt(document.getElementById('sessionMinutes').value);
             const stress = parseInt(document.getElementById('stressLevel').value) || 0;
@@ -658,60 +664,71 @@
             showLoading(true);
             showSaveStatus('💾 保存中...', '#bee3f8', '#2c5282');
 
-            try {
-                const sessionData = {
-                    action: 'addSession',
-                    member: member,
-                    minutes: minutes,
-                    stress: stress,
-                    focus: focus,
-                    sleep: sleep,
-                    mood: mood,
-                    weekNumber: dashboardData.currentWeek
-                };
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(sessionData)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            // ユニークなコールバック関数名を生成
+            const callbackName = 'jsonpCallback_' + Date.now();
+            
+            // グローバルスコープにコールバック関数を定義
+            window[callbackName] = function(result) {
+                try {
+                    if (result.success) {
+                        showSaveStatus('✅ 保存完了', '#c6f6d5', '#22543d');
+                        
+                        // データを再読み込み
+                        setTimeout(() => {
+                            loadDataFromSheet();
+                        }, 500);
+                        
+                        alert(`${member}さんのセッション（${minutes}分）を記録しました`);
+                        
+                        // フォームをリセット
+                        document.getElementById('memberSelect').value = '';
+                        document.getElementById('sessionMinutes').value = '';
+                        document.getElementById('stressLevel').value = '';
+                        document.getElementById('focusLevel').value = '';
+                        document.getElementById('sleepLevel').value = '';
+                        document.getElementById('moodLevel').value = '';
+                    } else {
+                        throw new Error(result.error || 'データの保存に失敗しました');
+                    }
+                } catch (error) {
+                    console.error('保存エラー:', error);
+                    showSaveStatus('⚠️ 保存失敗', '#fed7d7', '#742a2a');
+                    alert('データの保存に失敗しました。\n\n詳細: ' + error.message);
+                } finally {
+                    // クリーンアップ
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    showLoading(false);
+                    addButton.disabled = false;
+                    addButton.textContent = 'セッション記録';
                 }
+            };
 
-                const result = await response.json();
+            // パラメータを構築
+            const params = new URLSearchParams({
+                action: 'addSession',
+                member: member,
+                minutes: minutes,
+                stress: stress,
+                focus: focus,
+                sleep: sleep,
+                mood: mood,
+                weekNumber: dashboardData.currentWeek,
+                callback: callbackName
+            });
 
-                if (result.success) {
-                    showSaveStatus('✅ 保存完了', '#c6f6d5', '#22543d');
-                    
-                    // データを再読み込み
-                    await loadDataFromSheet();
-                    
-                    alert(`${member}さんのセッション（${minutes}分）を記録しました`);
-                    
-                    // フォームをリセット
-                    document.getElementById('memberSelect').value = '';
-                    document.getElementById('sessionMinutes').value = '';
-                    document.getElementById('stressLevel').value = '';
-                    document.getElementById('focusLevel').value = '';
-                    document.getElementById('sleepLevel').value = '';
-                    document.getElementById('moodLevel').value = '';
-                } else {
-                    throw new Error(result.error || 'データの保存に失敗しました');
-                }
-
-            } catch (error) {
-                console.error('保存エラー:', error);
+            // scriptタグを動的に作成してJSONPリクエスト
+            const script = document.createElement('script');
+            script.src = `${API_URL}?${params.toString()}`;
+            script.onerror = function() {
                 showSaveStatus('⚠️ 保存失敗', '#fed7d7', '#742a2a');
-                alert('データの保存に失敗しました。\n\n詳細: ' + error.message + '\n\nブラウザのコンソール(F12)で詳細を確認してください。');
-            } finally {
+                alert('スクリプトの読み込みに失敗しました。\nURLを確認してください。');
+                delete window[callbackName];
                 showLoading(false);
                 addButton.disabled = false;
                 addButton.textContent = 'セッション記録';
-            }
+            };
+            document.body.appendChild(script);
         }
 
         // ダッシュボード更新
