@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マインドフルネス瞑想 進捗ダッシュボード</title>
+    <title>マインドフルネス瞑想 進捗ダッシュボード（チーム共有版）</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -58,15 +63,61 @@
             font-size: 14px;
         }
 
-        .save-status {
+        .connection-status {
             display: inline-block;
             margin-left: 10px;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-connected {
             background: #c6f6d5;
             color: #22543d;
-            font-weight: bold;
+        }
+
+        .status-disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-loading {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .setup-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .setup-section {
+            margin-bottom: 20px;
+        }
+
+        .setup-section h3 {
+            color: #5a67d8;
+            margin-bottom: 10px;
+        }
+
+        .setup-section p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            margin: 5px 0;
         }
 
         .dashboard {
@@ -241,6 +292,11 @@
             opacity: 0.9;
         }
 
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .input-group {
             display: flex;
             gap: 10px;
@@ -290,6 +346,33 @@
             grid-column: 1 / -1;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -307,14 +390,51 @@
 </head>
 <body>
     <div class="container">
+        <!-- Firebase設定パネル -->
+        <div class="setup-panel" id="setupPanel">
+            <h2 style="color: #5a67d8; margin-bottom: 20px;">🔧 Firebase 初期設定</h2>
+            
+            <div class="setup-section">
+                <h3>ステップ1: Firebase プロジェクト作成</h3>
+                <p>1. <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> にアクセス</p>
+                <p>2. 「プロジェクトを追加」をクリック</p>
+                <p>3. プロジェクト名を入力（例: mindfulness-dashboard）</p>
+                <p>4. Google アナリティクスは不要なのでスキップ可能</p>
+            </div>
+
+            <div class="setup-section">
+                <h3>ステップ2: Realtime Database を有効化</h3>
+                <p>1. 左メニューから「Realtime Database」を選択</p>
+                <p>2. 「データベースを作成」をクリック</p>
+                <p>3. ロケーション: asia-southeast1 (シンガポール) を選択</p>
+                <p>4. セキュリティルール: 「テストモードで開始」を選択</p>
+            </div>
+
+            <div class="setup-section">
+                <h3>ステップ3: Firebase設定情報を取得</h3>
+                <p>1. プロジェクト設定（歯車アイコン）→ プロジェクトの設定</p>
+                <p>2. 下にスクロールして「アプリを追加」→ Web（</>）を選択</p>
+                <p>3. アプリのニックネームを入力（例: mindfulness-web）</p>
+                <p>4. 表示される設定情報を以下に入力:</p>
+                
+                <input type="text" class="config-input" id="apiKey" placeholder="apiKey: AIza...">
+                <input type="text" class="config-input" id="authDomain" placeholder="authDomain: your-project.firebaseapp.com">
+                <input type="text" class="config-input" id="databaseURL" placeholder="databaseURL: https://your-project-default-rtdb.firebaseio.com">
+                <input type="text" class="config-input" id="projectId" placeholder="projectId: your-project">
+                
+                <button onclick="saveFirebaseConfig()" style="margin-top: 15px;">✅ 設定を保存して接続</button>
+                <button onclick="hideSetupPanel()" style="background: #718096;">⏭️ 後で設定する</button>
+            </div>
+        </div>
+
         <header>
             <h1>
                 <div class="zen-icon">🧘</div>
-                マインドフルネス瞑想 進捗ダッシュボード
+                マインドフルネス瞑想 進捗ダッシュボード（チーム共有版）
             </h1>
             <div class="date-info">
                 <span id="currentDate"></span> | 業務改善チーム
-                <span class="save-status" id="saveStatus">💾 自動保存済み</span>
+                <span class="connection-status status-loading" id="connectionStatus">🔌 接続準備中...</span>
             </div>
         </header>
 
@@ -338,21 +458,21 @@
                 <input type="number" id="moodLevel" placeholder="気分の安定(1-10)" min="1" max="10">
             </div>
             <div class="button-group">
-                <button onclick="addSession()">セッション記録</button>
+                <button onclick="addSession()" id="addSessionBtn">セッション記録</button>
                 <button onclick="exportData()">データエクスポート</button>
                 <button onclick="resetWeek()">週次リセット</button>
-                <button onclick="resetGraphs()">完全リセット</button>
+                <button onclick="showSetupPanel()">⚙️ Firebase設定</button>
             </div>
         </div>
 
         <div class="dashboard">
             <div class="card">
                 <h3 class="card-title">📊 今週の実施状況</h3>
-                <div class="stat-number" id="weeklyRate">85%</div>
+                <div class="stat-number" id="weeklyRate">0%</div>
                 <div class="stat-label">チーム全体の実施率</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" id="weeklyProgress" style="width: 85%">
-                        17/20 セッション
+                    <div class="progress-fill" id="weeklyProgress" style="width: 0%">
+                        0/25 セッション
                     </div>
                 </div>
                 <p style="margin-top: 10px; color: #718096; font-size: 14px;">
@@ -362,16 +482,16 @@
 
             <div class="card">
                 <h3 class="card-title">⏱️ 累計実施時間</h3>
-                <div class="stat-number" id="totalMinutes">425</div>
+                <div class="stat-number" id="totalMinutes">0</div>
                 <div class="stat-label">分（今週）</div>
                 <div style="margin-top: 15px;">
                     <div style="display: flex; justify-content: space-between; margin: 5px 0;">
                         <span>平均実施時間</span>
-                        <strong id="avgMinutes">15分/回</strong>
+                        <strong id="avgMinutes">0分/回</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin: 5px 0;">
                         <span>最長記録</span>
-                        <strong id="maxMinutes">30分</strong>
+                        <strong id="maxMinutes">0分</strong>
                     </div>
                 </div>
             </div>
@@ -394,19 +514,19 @@
                 <h3 class="card-title">✨ 効果測定（平均値）</h3>
                 <div class="effect-grid">
                     <div class="effect-item">
-                        <div class="effect-score" id="stressScore">4.2</div>
+                        <div class="effect-score" id="stressScore">0.0</div>
                         <div class="effect-label">ストレス軽減</div>
                     </div>
                     <div class="effect-item">
-                        <div class="effect-score" id="focusScore">3.8</div>
+                        <div class="effect-score" id="focusScore">0.0</div>
                         <div class="effect-label">集中力向上</div>
                     </div>
                     <div class="effect-item">
-                        <div class="effect-score" id="sleepScore">3.5</div>
+                        <div class="effect-score" id="sleepScore">0.0</div>
                         <div class="effect-label">睡眠の質</div>
                     </div>
                     <div class="effect-item">
-                        <div class="effect-score" id="moodScore">4.0</div>
+                        <div class="effect-score" id="moodScore">0.0</div>
                         <div class="effect-label">気分の安定</div>
                     </div>
                 </div>
@@ -435,10 +555,14 @@
     </div>
 
     <script>
-        // LocalStorage のキー
-        const STORAGE_KEY = 'mindfulness_dashboard_data';
+        // Firebase設定
+        let firebaseConfig = null;
+        let database = null;
+        let isConnected = false;
+        const FIREBASE_CONFIG_KEY = 'firebase_config';
+        const DATA_PATH = 'mindfulness_dashboard';
 
-        // 週のラベルを生成する関数（現在の週から未来8週分）
+        // 週のラベルを生成する関数
         function generateWeekLabels() {
             const today = new Date();
             const labels = [];
@@ -462,10 +586,7 @@
             const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
             const dayOfMonth = date.getDate();
             const firstDayWeekday = firstDayOfMonth.getDay();
-            
-            // 月の最初の週からの経過日数を計算
             const weekNumber = Math.ceil((dayOfMonth + firstDayWeekday) / 7);
-            
             return weekNumber;
         }
 
@@ -496,48 +617,165 @@
             currentWeek: 0
         };
 
-        // データ管理用のオブジェクト
-        let dashboardData = loadData();
+        let dashboardData = JSON.parse(JSON.stringify(defaultData));
 
-        // データを保存
-        function saveData() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dashboardData));
-                showSaveStatus('💾 保存完了', '#c6f6d5', '#22543d');
-            } catch (error) {
-                console.error('データの保存に失敗しました:', error);
-                showSaveStatus('⚠️ 保存失敗', '#fed7d7', '#742a2a');
-            }
-        }
-
-        // データを読み込み
-        function loadData() {
-            try {
-                const savedData = localStorage.getItem(STORAGE_KEY);
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    console.log('保存データを読み込みました');
-                    showSaveStatus('📂 データ復元済み', '#bee3f8', '#2c5282');
-                    return data;
+        // Firebase初期化
+        function initFirebase() {
+            const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+            if (savedConfig) {
+                try {
+                    firebaseConfig = JSON.parse(savedConfig);
+                    connectToFirebase();
+                } catch (error) {
+                    console.error('Firebase設定の読み込みエラー:', error);
+                    updateConnectionStatus('disconnected', '❌ 設定エラー');
                 }
-            } catch (error) {
-                console.error('データの読み込みに失敗しました:', error);
+            } else {
+                updateConnectionStatus('disconnected', '⚙️ 未設定');
             }
-            return JSON.parse(JSON.stringify(defaultData)); // デフォルトデータのコピーを返す
         }
 
-        // 保存状態の表示
-        function showSaveStatus(text, bgColor, textColor) {
-            const status = document.getElementById('saveStatus');
-            status.textContent = text;
-            status.style.background = bgColor;
-            status.style.color = textColor;
+        // Firebase接続
+        function connectToFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                
+                // 接続状態の監視
+                database.ref('.info/connected').on('value', (snapshot) => {
+                    if (snapshot.val() === true) {
+                        isConnected = true;
+                        updateConnectionStatus('connected', '✅ 接続中');
+                        loadDataFromFirebase();
+                    } else {
+                        isConnected = false;
+                        updateConnectionStatus('disconnected', '⚠️ オフライン');
+                    }
+                });
+
+                // データの変更をリアルタイムで監視
+                database.ref(DATA_PATH).on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        dashboardData = snapshot.val();
+                        updateDashboard();
+                        updateCharts();
+                        showNotification('📥 データが更新されました');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Firebase接続エラー:', error);
+                updateConnectionStatus('disconnected', '❌ 接続失敗');
+                alert('Firebase接続に失敗しました。設定を確認してください。');
+            }
+        }
+
+        // 接続状態の更新
+        function updateConnectionStatus(status, text) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = 'connection-status status-' + status;
+            statusEl.textContent = text;
+        }
+
+        // Firebase設定を保存
+        function saveFirebaseConfig() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const authDomain = document.getElementById('authDomain').value.trim();
+            const databaseURL = document.getElementById('databaseURL').value.trim();
+            const projectId = document.getElementById('projectId').value.trim();
+
+            if (!apiKey || !authDomain || !databaseURL || !projectId) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+
+            firebaseConfig = {
+                apiKey: apiKey,
+                authDomain: authDomain,
+                databaseURL: databaseURL,
+                projectId: projectId
+            };
+
+            localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(firebaseConfig));
             
+            hideSetupPanel();
+            connectToFirebase();
+            showNotification('✅ Firebase設定が保存されました');
+        }
+
+        // 設定パネルの表示/非表示
+        function showSetupPanel() {
+            document.getElementById('setupPanel').classList.remove('hidden');
+            
+            // 既存の設定を表示
+            const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('apiKey').value = config.apiKey || '';
+                document.getElementById('authDomain').value = config.authDomain || '';
+                document.getElementById('databaseURL').value = config.databaseURL || '';
+                document.getElementById('projectId').value = config.projectId || '';
+            }
+        }
+
+        function hideSetupPanel() {
+            document.getElementById('setupPanel').classList.add('hidden');
+        }
+
+        // Firebaseにデータを保存
+        function saveDataToFirebase() {
+            if (!database || !isConnected) {
+                console.log('Firebase未接続のため、ローカルのみに保存');
+                return;
+            }
+
+            database.ref(DATA_PATH).set(dashboardData)
+                .then(() => {
+                    console.log('Firebaseに保存成功');
+                })
+                .catch((error) => {
+                    console.error('Firebase保存エラー:', error);
+                    showNotification('⚠️ 保存に失敗しました');
+                });
+        }
+
+        // Firebaseからデータを読み込み
+        function loadDataFromFirebase() {
+            if (!database) return;
+
+            database.ref(DATA_PATH).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        dashboardData = snapshot.val();
+                        updateDashboard();
+                        updateCharts();
+                    } else {
+                        // データが存在しない場合は初期データを保存
+                        saveDataToFirebase();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Firebaseデータ読み込みエラー:', error);
+                });
+        }
+
+        // 通知表示
+        function showNotification(message) {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
             setTimeout(() => {
-                status.textContent = '💾 自動保存済み';
-                status.style.background = '#c6f6d5';
-                status.style.color = '#22543d';
-            }, 2000);
+                notification.remove();
+            }, 3000);
         }
 
         // セッション追加機能
@@ -558,39 +796,26 @@
                 dashboardData.members[member].sessions += 1;
                 dashboardData.members[member].minutes += minutes;
                 
-                // 各指標の合計値を加算
-                if (stress > 0) {
-                    dashboardData.members[member].stressTotal += stress;
-                }
-                if (focus > 0) {
-                    dashboardData.members[member].focusTotal += focus;
-                }
-                if (sleep > 0) {
-                    dashboardData.members[member].sleepTotal += sleep;
-                }
-                if (mood > 0) {
-                    dashboardData.members[member].moodTotal += mood;
-                }
+                if (stress > 0) dashboardData.members[member].stressTotal += stress;
+                if (focus > 0) dashboardData.members[member].focusTotal += focus;
+                if (sleep > 0) dashboardData.members[member].sleepTotal += sleep;
+                if (mood > 0) dashboardData.members[member].moodTotal += mood;
                 
-                // データ数をカウント（少なくとも1つの値が入力された場合）
                 if (stress > 0 || focus > 0 || sleep > 0 || mood > 0) {
                     dashboardData.members[member].dataCount += 1;
                 }
             }
 
-            // 週次データを更新
             dashboardData.weeklyData[dashboardData.currentWeek] += 1;
-            
-            // 効果データを更新（全メンバーの合計値）
             updateEffectTotals();
             
-            // データを保存
-            saveData();
+            // Firebaseに保存
+            saveDataToFirebase();
             
             updateDashboard();
             updateCharts();
             
-            alert(`${member}さんのセッション（${minutes}分）を記録しました`);
+            showNotification(`✅ ${member}さんのセッション（${minutes}分）を記録しました`);
             
             // フォームをリセット
             document.getElementById('memberSelect').value = '';
@@ -603,10 +828,7 @@
 
         // 効果データの合計値を更新
         function updateEffectTotals() {
-            let totalStress = 0;
-            let totalFocus = 0;
-            let totalSleep = 0;
-            let totalMood = 0;
+            let totalStress = 0, totalFocus = 0, totalSleep = 0, totalMood = 0;
             
             Object.values(dashboardData.members).forEach(member => {
                 totalStress += member.stressTotal;
@@ -623,13 +845,7 @@
 
         // ダッシュボード更新
         function updateDashboard() {
-            // 週次実施率の更新
-            let totalSessions = 0;
-            let totalStress = 0;
-            let totalFocus = 0;
-            let totalSleep = 0;
-            let totalMood = 0;
-            let totalDataCount = 0;
+            let totalSessions = 0, totalStress = 0, totalFocus = 0, totalSleep = 0, totalMood = 0, totalDataCount = 0;
             
             Object.values(dashboardData.members).forEach(member => {
                 totalSessions += member.sessions;
@@ -645,24 +861,15 @@
             document.getElementById('weeklyProgress').style.width = weeklyRate + '%';
             document.getElementById('weeklyProgress').textContent = `${totalSessions}/25 セッション`;
 
-            // 累計時間の更新
-            let totalMinutes = 0;
-            let maxMinutes = 0;
+            let totalMinutes = 0, maxMinutes = 0;
             Object.values(dashboardData.members).forEach(member => {
                 totalMinutes += member.minutes;
-                if (member.minutes > maxMinutes) {
-                    maxMinutes = member.minutes;
-                }
+                if (member.minutes > maxMinutes) maxMinutes = member.minutes;
             });
             document.getElementById('totalMinutes').textContent = totalMinutes;
-            if (totalSessions > 0) {
-                document.getElementById('avgMinutes').textContent = Math.round(totalMinutes / totalSessions) + '分/回';
-            } else {
-                document.getElementById('avgMinutes').textContent = '0分/回';
-            }
+            document.getElementById('avgMinutes').textContent = totalSessions > 0 ? Math.round(totalMinutes / totalSessions) + '分/回' : '0分/回';
             document.getElementById('maxMinutes').textContent = maxMinutes + '分';
             
-            // 月間達成度の更新（仮に目標80セッションとして計算）
             const monthlyGoal = 80;
             const monthlyRate = Math.min(Math.round((totalSessions / monthlyGoal) * 100), 100);
             const remainingSessions = Math.max(monthlyGoal - totalSessions, 0);
@@ -672,7 +879,6 @@
             document.getElementById('monthlyProgress').textContent = `${totalSessions}/${monthlyGoal} セッション`;
             document.getElementById('monthlyRemaining').textContent = `残り: ${remainingSessions}セッション`;
             
-            // 効果測定の平均値を更新（合計値を全セッション数で割る）
             if (totalDataCount > 0) {
                 document.getElementById('stressScore').textContent = (totalStress / totalDataCount).toFixed(1);
                 document.getElementById('focusScore').textContent = (totalFocus / totalDataCount).toFixed(1);
@@ -685,7 +891,6 @@
                 document.getElementById('moodScore').textContent = '0.0';
             }
             
-            // メンバー別進捗UIを更新
             updateMemberDisplay();
         }
         
@@ -721,13 +926,11 @@
 
         // グラフ更新関数
         function updateCharts() {
-            // 週次推移グラフの最大値を自動計算（現在のデータの最大値 + 5のマージン）
             const maxWeekly = Math.max(...dashboardData.weeklyData, 25);
             weeklyChart.options.scales.y.max = Math.ceil(maxWeekly / 5) * 5 + 5;
             weeklyChart.data.datasets[0].data = dashboardData.weeklyData;
             weeklyChart.update();
             
-            // 効果測定グラフの最大値を自動計算
             const allEffectValues = [
                 ...dashboardData.effectData.stress,
                 ...dashboardData.effectData.focus,
@@ -759,43 +962,20 @@
             link.click();
             document.body.removeChild(link);
             
-            alert('データをエクスポートしました');
+            showNotification('📊 データをエクスポートしました');
         }
 
         // 週次リセット機能
         function resetWeek() {
-            if (confirm('週次データ（セッション数と時間）をリセットしますか？\n※効果測定データは保持されます')) {
+            if (confirm('週次データ（セッション数と時間）をリセットしますか？\n※効果測定データは保持されます\n※チーム全員に影響します')) {
                 Object.keys(dashboardData.members).forEach(member => {
                     dashboardData.members[member].sessions = 0;
                     dashboardData.members[member].minutes = 0;
                 });
                 
-                // データを保存
-                saveData();
-                
+                saveDataToFirebase();
                 updateDashboard();
-                alert('週次データをリセットしました');
-            }
-        }
-
-        // グラフリセット機能
-        function resetGraphs() {
-            if (confirm('⚠️ すべてのデータを完全にリセットしますか？\n\nこの操作は取り消せません。\n・グラフデータ\n・メンバー別進捗\n・効果測定\n・月間達成度\nすべてが削除されます。')) {
-                // データを初期化
-                dashboardData = JSON.parse(JSON.stringify(defaultData));
-                
-                // LocalStorageから削除
-                localStorage.removeItem(STORAGE_KEY);
-                
-                // グラフを更新
-                updateCharts();
-                
-                // ダッシュボードを更新
-                updateDashboard();
-                
-                showSaveStatus('🗑️ データ削除完了', '#fed7d7', '#742a2a');
-                
-                alert('すべてのデータをリセットしました');
+                showNotification('🔄 週次データをリセットしました');
             }
         }
 
@@ -821,9 +1001,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: 12,
@@ -834,15 +1012,9 @@
                     y: {
                         beginAtZero: true,
                         max: 30,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
@@ -902,12 +1074,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: {
-                                size: 12
-                            }
-                        }
+                        labels: { padding: 15, font: { size: 12 } }
                     },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -919,21 +1086,16 @@
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
 
         // ページ読み込み時の初期化
         window.onload = function() {
+            initFirebase();
             updateDashboard();
             updateCharts();
         };
