@@ -32,10 +32,24 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         h1 {
             color: #5a67d8;
             font-size: 28px;
-            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -53,6 +67,57 @@
             font-size: 24px;
         }
 
+        .video-link-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 25px 30px;
+            border-radius: 18px;
+            border: 3px solid rgba(102, 126, 234, 0.4);
+        }
+
+        .mindfulness-image-link {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+            flex-shrink: 0;
+        }
+
+        .mindfulness-image-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        .mindfulness-image {
+            width: 200px;
+            height: auto;
+            display: block;
+            border-radius: 15px;
+        }
+
+        .video-description {
+            flex: 1;
+        }
+
+        .video-description-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #5a67d8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-description-text {
+            font-size: 17px;
+            color: #4a5568;
+            line-height: 1.7;
+        }
+
         .date-info {
             color: #666;
             font-size: 14px;
@@ -67,6 +132,112 @@
             background: #c6f6d5;
             color: #22543d;
             font-weight: bold;
+        }
+
+        .audio-player-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .audio-controls label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .audio-controls input[type="range"] {
+            flex: 1;
+            min-width: 200px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .audio-controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .audio-controls input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .time-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #5a67d8;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .audio-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            font-size: 16px;
+        }
+
+        .audio-button:hover {
+            opacity: 0.9;
+        }
+
+        .audio-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .audio-button.stop {
+            background: linear-gradient(135deg, #fc8181, #f56565);
+        }
+
+        .audio-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .audio-progress {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .audio-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
         .dashboard {
@@ -348,6 +519,37 @@
             input, select {
                 min-width: 100%;
             }
+
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .video-link-section {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .mindfulness-image {
+                width: 140px;
+            }
+
+            .video-description-title {
+                font-size: 18px;
+            }
+
+            .video-description-text {
+                font-size: 15px;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .audio-controls input[type="range"] {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -358,15 +560,53 @@
 
     <div class="container">
         <header>
-            <h1>
-                <div class="zen-icon">🧘</div>
-                マインドフルネス瞑想 進捗ダッシュボード
-            </h1>
+            <div class="header-top">
+                <div class="header-title">
+                    <h1>
+                        <div class="zen-icon">🧘</div>
+                        マインドフルネス瞑想 進捗ダッシュボード
+                    </h1>
+                </div>
+                <div class="video-link-section">
+                    <a href="https://youtu.be/f5i0AKJWMck" target="_blank" class="mindfulness-image-link" title="マインドフルネス瞑想動画を見る">
+                        <img src="mindfulness.png" alt="マインドフルネス瞑想" class="mindfulness-image">
+                    </a>
+                    <div class="video-description">
+                        <div class="video-description-title">
+                            🎓 初心者向け解説動画
+                        </div>
+                        <div class="video-description-text">
+                            マインドフルネス瞑想の基本を<br>
+                            わかりやすく学べる動画です
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="date-info">
                 <span id="currentDate"></span> | 業務改善チーム
                 <span class="save-status" id="saveStatus">🔄 読み込み中...</span>
             </div>
         </header>
+
+        <!-- 音声再生コントロール -->
+        <div class="audio-player-section">
+            <h3 style="margin-bottom: 15px; color: #4a5568;">🎵 マインドフルネス音声ガイド</h3>
+            <div class="audio-controls">
+                <label for="audioDuration">再生時間:</label>
+                <input type="range" id="audioDuration" min="1" max="10" value="5" step="1">
+                <div class="time-display" id="timeDisplay">5分</div>
+                <button class="audio-button" id="playButton" onclick="playAudio()">▶ 再生</button>
+                <button class="audio-button stop" id="stopButton" onclick="stopAudio()" style="display: none;">⏹ 停止</button>
+            </div>
+            <div class="audio-status" id="audioStatus" style="display: none;">
+                <span id="currentTime">0:00</span>
+                <div class="audio-progress">
+                    <div class="audio-progress-fill" id="audioProgressFill"></div>
+                </div>
+                <span id="remainingTime">5:00</span>
+            </div>
+            <audio id="audioPlayer" src="mindfulness.mp3" style="display: none;"></audio>
+        </div>
 
         <!-- API設定の注意喚起 -->
         <div class="config-notice" id="configNotice" style="display: none;">
@@ -500,6 +740,107 @@
         if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
             document.getElementById('configNotice').style.display = 'block';
         }
+
+        // ===================================
+        // 音声再生機能
+        // ===================================
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioDuration = document.getElementById('audioDuration');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const playButton = document.getElementById('playButton');
+        const stopButton = document.getElementById('stopButton');
+        const audioStatus = document.getElementById('audioStatus');
+        const audioProgressFill = document.getElementById('audioProgressFill');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const remainingTimeDisplay = document.getElementById('remainingTime');
+
+        let audioTimer = null;
+        let selectedDuration = 5; // デフォルト5分
+
+        // スライダーの値が変更されたときの処理
+        audioDuration.addEventListener('input', function() {
+            selectedDuration = parseInt(this.value);
+            timeDisplay.textContent = selectedDuration + '分';
+            updateRemainingTime();
+        });
+
+        // 音声再生
+        function playAudio() {
+            selectedDuration = parseInt(audioDuration.value);
+            const durationInSeconds = selectedDuration * 60;
+
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+
+            playButton.style.display = 'none';
+            stopButton.style.display = 'inline-block';
+            audioStatus.style.display = 'flex';
+
+            // タイマーをセット
+            audioTimer = setTimeout(() => {
+                stopAudio();
+            }, durationInSeconds * 1000);
+
+            // 進捗更新
+            updateAudioProgress();
+        }
+
+        // 音声停止
+        function stopAudio() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+
+            if (audioTimer) {
+                clearTimeout(audioTimer);
+                audioTimer = null;
+            }
+
+            playButton.style.display = 'inline-block';
+            stopButton.style.display = 'none';
+            audioStatus.style.display = 'none';
+            audioProgressFill.style.width = '0%';
+        }
+
+        // 進捗バーの更新
+        function updateAudioProgress() {
+            if (!audioPlayer.paused) {
+                const currentTime = audioPlayer.currentTime;
+                const maxDuration = selectedDuration * 60;
+                const progress = (currentTime / maxDuration) * 100;
+
+                audioProgressFill.style.width = Math.min(progress, 100) + '%';
+
+                // 時間表示の更新
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = Math.floor(currentTime % 60);
+                currentTimeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                const remaining = maxDuration - currentTime;
+                const remainingMinutes = Math.floor(remaining / 60);
+                const remainingSeconds = Math.floor(remaining % 60);
+                remainingTimeDisplay.textContent = `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+
+                requestAnimationFrame(updateAudioProgress);
+            }
+        }
+
+        // 残り時間の初期表示更新
+        function updateRemainingTime() {
+            const minutes = selectedDuration;
+            remainingTimeDisplay.textContent = `${minutes}:00`;
+        }
+
+        // 音声が終了したときの処理
+        audioPlayer.addEventListener('ended', function() {
+            if (!audioTimer) {
+                // タイマーで停止していない場合（音声ファイルが終了した場合）
+                stopAudio();
+            }
+        });
+
+        // ===================================
+        // ダッシュボード機能
+        // ===================================
 
         // 日付の表示
         function updateDate() {
