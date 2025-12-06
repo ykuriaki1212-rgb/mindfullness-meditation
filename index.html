@@ -850,45 +850,47 @@
         }
         updateDate();
 
-        // 週番号を取得する関数（0から始まる）
+        // 日曜日を週の開始日として週番号を取得（0から始まる）
         function getCurrentWeekNumber() {
             const today = new Date();
-            const month = today.getMonth() + 1;
-            const weekNumber = getWeekNumber(today) - 1; // 0ベースのインデックス
+            const startDate = new Date(2024, 11, 1); // 2024年12月1日から開始
             
-            // 12月第1週から順に0,1,2,3,4,5,6,7と割り当て
-            if (month === 12) {
-                return weekNumber;
-            } else if (month === 1) {
-                return 4 + weekNumber;
+            // 今日が日曜日から何週目かを計算
+            const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            const weeksSinceStart = Math.floor(daysSinceStart / 7);
+            
+            return weeksSinceStart;
+        }
+
+        // 週のラベルを生成する関数（日曜始まりの週）
+        function generateWeekLabels() {
+            const labels = [];
+            const today = new Date();
+            const currentWeekIndex = getCurrentWeekNumber();
+            
+            // 現在の週の日曜日を見つける
+            const currentSunday = new Date(today);
+            currentSunday.setDate(today.getDate() - today.getDay());
+            
+            // 4週前から3週後まで（計8週間）のラベルを生成
+            for (let i = -4; i <= 3; i++) {
+                const weekStart = new Date(currentSunday);
+                weekStart.setDate(currentSunday.getDate() + (i * 7));
+                
+                const year = weekStart.getFullYear();
+                const month = weekStart.getMonth() + 1;
+                const day = weekStart.getDate();
+                
+                // 週の終わり（土曜日）を計算
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                const endMonth = weekEnd.getMonth() + 1;
+                const endDay = weekEnd.getDate();
+                
+                labels.push(`${month}/${day}〜${endMonth}/${endDay}`);
             }
             
-            return 0; // デフォルトは第1週
-        }
-
-        // 週番号を取得する関数（1から始まる）
-        function getWeekNumber(date) {
-            const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-            const dayOfMonth = date.getDate();
-            const firstDayWeekday = firstDayOfMonth.getDay();
-            
-            const weekNumber = Math.ceil((dayOfMonth + firstDayWeekday) / 7);
-            
-            return weekNumber;
-        }
-
-        // 週のラベルを生成する関数
-        function generateWeekLabels() {
-            return [
-                '2024年12月第1週',
-                '2024年12月第2週',
-                '2024年12月第3週',
-                '2024年12月第4週',
-                '2025年1月第1週',
-                '2025年1月第2週',
-                '2025年1月第3週',
-                '2025年1月第4週'
-            ];
+            return labels;
         }
 
         // データ管理用のオブジェクト
