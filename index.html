@@ -625,7 +625,7 @@
                     <option value="東郷">東郷</option>
                     <option value="栗秋">栗秋</option>
                 </select>
-                <input type="number" id="sessionMinutes" placeholder="実施時間（分）" min="1" max="60">
+                <input type="number" id="sessionMinutes" placeholder="実施時間(分)" min="1" max="60">
             </div>
             <div class="input-group">
                 <input type="number" id="stressLevel" placeholder="ストレス軽減度(1-10)" min="1" max="10">
@@ -643,7 +643,7 @@
         <div class="dashboard">
             <div class="card">
                 <h3 class="card-title">📊 今週の実施状況</h3>
-                <div class="stat-number" id="weeklyRate">0%</div>
+                <div class="stat-number" id="weeklyRate">0.00%</div>
                 <div class="stat-label">チーム全体の実施率</div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="weeklyProgress" style="width: 0%">
@@ -658,7 +658,7 @@
             <div class="card">
                 <h3 class="card-title">⏱️ 累計実施時間</h3>
                 <div class="stat-number" id="totalMinutes">0</div>
-                <div class="stat-label">分（今週）</div>
+                <div class="stat-label">分(今週)</div>
                 <div style="margin-top: 15px;">
                     <div style="display: flex; justify-content: space-between; margin: 5px 0;">
                         <span>平均実施時間</span>
@@ -673,7 +673,7 @@
 
             <div class="card">
                 <h3 class="card-title">🎯 月間目標達成度</h3>
-                <div class="stat-number" id="monthlyRate">0%</div>
+                <div class="stat-number" id="monthlyRate">0.00%</div>
                 <div class="stat-label">達成率</div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="monthlyProgress" style="width: 0%">
@@ -686,7 +686,7 @@
             </div>
 
             <div class="card">
-                <h3 class="card-title">✨ 効果測定（平均値）</h3>
+                <h3 class="card-title">✨ 効果測定(平均値)</h3>
                 <div class="effect-grid">
                     <div class="effect-item">
                         <div class="effect-score" id="stressScore">0.0</div>
@@ -734,9 +734,7 @@
         // 🔧 重要: ここにGoogle Apps ScriptのデプロイURLを設定してください
         // ===================================
         const API_URL = 'https://script.google.com/macros/s/AKfycbzyzHaM58wnyhB8iQb9Qiguulh4GqW32vQW8xvUsf8R6I_rXd9QhHJNOQrFpLQXByGCMw/exec';
-        // 例: 'https://script.google.com/macros/s/AKfycbx.../exec'
         
-        // API URLが設定されているかチェック
         if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
             document.getElementById('configNotice').style.display = 'block';
         }
@@ -755,16 +753,14 @@
         const remainingTimeDisplay = document.getElementById('remainingTime');
 
         let audioTimer = null;
-        let selectedDuration = 5; // デフォルト5分
+        let selectedDuration = 5;
 
-        // スライダーの値が変更されたときの処理
         audioDuration.addEventListener('input', function() {
             selectedDuration = parseInt(this.value);
             timeDisplay.textContent = selectedDuration + '分';
             updateRemainingTime();
         });
 
-        // 音声再生
         function playAudio() {
             selectedDuration = parseInt(audioDuration.value);
             const durationInSeconds = selectedDuration * 60;
@@ -776,16 +772,13 @@
             stopButton.style.display = 'inline-block';
             audioStatus.style.display = 'flex';
 
-            // タイマーをセット
             audioTimer = setTimeout(() => {
                 stopAudio();
             }, durationInSeconds * 1000);
 
-            // 進捗更新
             updateAudioProgress();
         }
 
-        // 音声停止
         function stopAudio() {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
@@ -801,7 +794,6 @@
             audioProgressFill.style.width = '0%';
         }
 
-        // 進捗バーの更新
         function updateAudioProgress() {
             if (!audioPlayer.paused) {
                 const currentTime = audioPlayer.currentTime;
@@ -810,7 +802,6 @@
 
                 audioProgressFill.style.width = Math.min(progress, 100) + '%';
 
-                // 時間表示の更新
                 const minutes = Math.floor(currentTime / 60);
                 const seconds = Math.floor(currentTime % 60);
                 currentTimeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -824,16 +815,13 @@
             }
         }
 
-        // 残り時間の初期表示更新
         function updateRemainingTime() {
             const minutes = selectedDuration;
             remainingTimeDisplay.textContent = `${minutes}:00`;
         }
 
-        // 音声が終了したときの処理
         audioPlayer.addEventListener('ended', function() {
             if (!audioTimer) {
-                // タイマーで停止していない場合（音声ファイルが終了した場合）
                 stopAudio();
             }
         });
@@ -842,7 +830,6 @@
         // ダッシュボード機能
         // ===================================
 
-        // 日付の表示
         function updateDate() {
             const now = new Date();
             const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
@@ -850,77 +837,54 @@
         }
         updateDate();
 
-        // 日曜日を週の開始日として週番号を取得（0から始まる）
-        // 2024年12月1日（日曜日）を週0として計算
-        function getCurrentWeekNumber() {
-            const today = new Date();
-            const startDate = new Date(2024, 11, 1); // 2024年12月1日（日曜日）
+        // 日曜日始まりの週番号を計算(2024年12月1日を基準、0から開始)
+        function calculateWeekNumber(date) {
+            const startDate = new Date(2024, 11, 1); // 2024年12月1日(日曜日)
+            const targetDate = new Date(date);
             
-            // その週の日曜日を取得する関数
-            function getSunday(date) {
-                const d = new Date(date);
+            function getSunday(d) {
                 const day = d.getDay();
-                const diff = d.getDate() - day; // 日曜日までの日数差
-                return new Date(d.setDate(diff));
+                const diff = d.getDate() - day;
+                return new Date(d.getFullYear(), d.getMonth(), diff);
             }
             
             const startSunday = getSunday(startDate);
-            const todaySunday = getSunday(today);
+            const targetSunday = getSunday(targetDate);
             
-            // 日曜日から日曜日までの週数を計算
-            const diffTime = todaySunday - startSunday;
+            const diffTime = targetSunday.getTime() - startSunday.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             const weekNumber = Math.floor(diffDays / 7);
             
             return weekNumber;
         }
 
-        // 週のラベルを生成する関数（日曜始まりの週）
+        // 現在の週番号を取得
+        function getCurrentWeekNumber() {
+            return calculateWeekNumber(new Date());
+        }
+
+        // 週のラベルを生成
         function generateWeekLabels() {
-            const labels = [];
-            const today = new Date();
-            const currentWeekIndex = getCurrentWeekNumber();
-            
-            // その週の日曜日を取得する関数
-            function getSunday(date) {
-                const d = new Date(date);
-                const day = d.getDay();
-                const diff = d.getDate() - day;
-                return new Date(d.setDate(diff));
-            }
-            
-            // 現在の週の日曜日を見つける
-            const currentSunday = getSunday(today);
-            
-            // 4週前から3週後まで（計8週間）のラベルを生成
-            for (let i = -4; i <= 3; i++) {
-                const weekStart = new Date(currentSunday);
-                weekStart.setDate(currentSunday.getDate() + (i * 7));
-                
-                const year = weekStart.getFullYear();
-                const month = weekStart.getMonth() + 1;
-                const day = weekStart.getDate();
-                
-                // 週の終わり（土曜日）を計算
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekStart.getDate() + 6);
-                const endMonth = weekEnd.getMonth() + 1;
-                const endDay = weekEnd.getDate();
-                
-                labels.push(`${month}/${day}〜${endMonth}/${endDay}`);
-            }
-            
-            return labels;
+            return [
+                '2024年12月第1週',
+                '2024年12月第2週',
+                '2024年12月第3週',
+                '2024年12月第4週',
+                '2025年1月第1週',
+                '2025年1月第2週',
+                '2025年1月第3週',
+                '2025年1月第4週'
+            ];
         }
 
         // データ管理用のオブジェクト
         let dashboardData = {
             members: {
-                '野杁': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0 },
-                '寺澤': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0 },
-                '下出': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0 },
-                '東郷': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0 },
-                '栗秋': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0 }
+                '野杁': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0, weeklySessions: 0, weeklyMinutes: 0 },
+                '寺澤': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0, weeklySessions: 0, weeklyMinutes: 0 },
+                '下出': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0, weeklySessions: 0, weeklyMinutes: 0 },
+                '東郷': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0, weeklySessions: 0, weeklyMinutes: 0 },
+                '栗秋': { sessions: 0, minutes: 0, stressTotal: 0, focusTotal: 0, sleepTotal: 0, moodTotal: 0, weeklySessions: 0, weeklyMinutes: 0 }
             },
             weeklyData: [0, 0, 0, 0, 0, 0, 0, 0],
             effectData: {
@@ -929,16 +893,15 @@
                 sleep: [0, 0, 0, 0, 0, 0, 0, 0],
                 mood: [0, 0, 0, 0, 0, 0, 0, 0]
             },
-            currentWeek: getCurrentWeekNumber()
+            currentWeek: getCurrentWeekNumber(),
+            sessionDetails: []
         };
 
-        // ローディング表示
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
             overlay.style.display = show ? 'flex' : 'none';
         }
 
-        // 保存状態の表示
         function showSaveStatus(text, bgColor, textColor) {
             const status = document.getElementById('saveStatus');
             status.textContent = text;
@@ -946,7 +909,6 @@
             status.style.color = textColor;
         }
 
-        // Googleスプレッドシートからデータを読み込み（JSONP方式でCORS回避）
         function loadDataFromSheet() {
             if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
                 alert('⚠️ Google Apps ScriptのURLが設定されていません。\nHTMLファイル内の「API_URL」を設定してください。');
@@ -956,19 +918,20 @@
             showLoading(true);
             showSaveStatus('🔄 データ読み込み中...', '#bee3f8', '#2c5282');
 
-            // ユニークなコールバック関数名を生成
             const callbackName = 'jsonpCallback_' + Date.now();
             
-            // グローバルスコープにコールバック関数を定義
             window[callbackName] = function(result) {
                 try {
                     if (result.success) {
-                        // データを更新
                         dashboardData.members = result.members;
                         dashboardData.weeklyData = result.weeklyData;
                         dashboardData.effectData = result.effectData;
+                        
+                        if (result.sessionDetails) {
+                            dashboardData.sessionDetails = result.sessionDetails;
+                            calculateWeeklyData();
+                        }
 
-                        // UIを更新
                         updateDashboard();
                         updateCharts();
 
@@ -981,14 +944,12 @@
                     showSaveStatus('⚠️ 読み込み失敗', '#fed7d7', '#742a2a');
                     alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message);
                 } finally {
-                    // クリーンアップ
                     delete window[callbackName];
                     document.body.removeChild(script);
                     showLoading(false);
                 }
             };
 
-            // scriptタグを動的に作成してJSONPリクエスト
             const script = document.createElement('script');
             script.src = `${API_URL}?action=getData&callback=${callbackName}`;
             script.onerror = function() {
@@ -1000,7 +961,25 @@
             document.body.appendChild(script);
         }
 
-        // セッション追加機能（JSONP方式でCORS回避）
+        // 今週のデータを再計算
+        function calculateWeeklyData() {
+            const currentWeek = getCurrentWeekNumber();
+            
+            Object.keys(dashboardData.members).forEach(memberName => {
+                dashboardData.members[memberName].weeklySessions = 0;
+                dashboardData.members[memberName].weeklyMinutes = 0;
+            });
+            
+            dashboardData.sessionDetails.forEach(session => {
+                const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
+                
+                if (sessionWeek === currentWeek && dashboardData.members[session.member]) {
+                    dashboardData.members[session.member].weeklySessions++;
+                    dashboardData.members[session.member].weeklyMinutes += session.minutes;
+                }
+            });
+        }
+
         function addSession() {
             const member = document.getElementById('memberSelect').value;
             const minutes = parseInt(document.getElementById('sessionMinutes').value);
@@ -1019,7 +998,6 @@
                 return;
             }
 
-            // ボタンを無効化
             const addButton = document.getElementById('addButton');
             addButton.disabled = true;
             addButton.textContent = '保存中...';
@@ -1027,23 +1005,19 @@
             showLoading(true);
             showSaveStatus('💾 保存中...', '#bee3f8', '#2c5282');
 
-            // ユニークなコールバック関数名を生成
             const callbackName = 'jsonpCallback_' + Date.now();
             
-            // グローバルスコープにコールバック関数を定義
             window[callbackName] = function(result) {
                 try {
                     if (result.success) {
                         showSaveStatus('✅ 保存完了', '#c6f6d5', '#22543d');
                         
-                        // データを再読み込み
                         setTimeout(() => {
                             loadDataFromSheet();
                         }, 500);
                         
-                        alert(`${member}さんのセッション（${minutes}分）を記録しました`);
+                        alert(`${member}さんのセッション(${minutes}分)を記録しました`);
                         
-                        // フォームをリセット
                         document.getElementById('memberSelect').value = '';
                         document.getElementById('sessionMinutes').value = '';
                         document.getElementById('stressLevel').value = '';
@@ -1058,7 +1032,6 @@
                     showSaveStatus('⚠️ 保存失敗', '#fed7d7', '#742a2a');
                     alert('データの保存に失敗しました。\n\n詳細: ' + error.message);
                 } finally {
-                    // クリーンアップ
                     delete window[callbackName];
                     document.body.removeChild(script);
                     showLoading(false);
@@ -1067,7 +1040,6 @@
                 }
             };
 
-            // パラメータを構築（週番号は送らない。GAS側で計算）
             const params = new URLSearchParams({
                 action: 'addSession',
                 member: member,
@@ -1079,7 +1051,6 @@
                 callback: callbackName
             });
 
-            // scriptタグを動的に作成してJSONPリクエスト
             const script = document.createElement('script');
             script.src = `${API_URL}?${params.toString()}`;
             script.onerror = function() {
@@ -1093,10 +1064,11 @@
             document.body.appendChild(script);
         }
 
-        // ダッシュボード更新
         function updateDashboard() {
-            // 週次実施率の更新
-            let totalSessions = 0;
+            const currentWeek = getCurrentWeekNumber();
+            
+            let weeklyTotalSessions = 0;
+            let weeklyTotalMinutes = 0;
             let totalStress = 0;
             let totalFocus = 0;
             let totalSleep = 0;
@@ -1104,52 +1076,63 @@
             let dataCount = 0;
             
             Object.values(dashboardData.members).forEach(member => {
-                totalSessions += member.sessions;
+                weeklyTotalSessions += member.weeklySessions || 0;
+                weeklyTotalMinutes += member.weeklyMinutes || 0;
                 totalStress += member.stressTotal;
                 totalFocus += member.focusTotal;
                 totalSleep += member.sleepTotal;
                 totalMood += member.moodTotal;
                 
-                // データ数をカウント（合計値が0より大きい場合）
                 if (member.stressTotal > 0 || member.focusTotal > 0 || 
                     member.sleepTotal > 0 || member.moodTotal > 0) {
                     dataCount += member.sessions;
                 }
             });
             
-            const weeklyRate = Math.round((totalSessions / 25) * 100);
-            document.getElementById('weeklyRate').textContent = weeklyRate + '%';
-            document.getElementById('weeklyProgress').style.width = weeklyRate + '%';
-            document.getElementById('weeklyProgress').textContent = `${totalSessions}/25 セッション`;
+            const weeklyRate = (weeklyTotalSessions / 25) * 100;
+            document.getElementById('weeklyRate').textContent = weeklyRate.toFixed(2) + '%';
+            document.getElementById('weeklyProgress').style.width = Math.min(weeklyRate, 100) + '%';
+            document.getElementById('weeklyProgress').textContent = `${weeklyTotalSessions}/25 セッション`;
 
-            // 累計時間の更新
-            let totalMinutes = 0;
+            document.getElementById('totalMinutes').textContent = weeklyTotalMinutes;
+            if (weeklyTotalSessions > 0) {
+                document.getElementById('avgMinutes').textContent = Math.round(weeklyTotalMinutes / weeklyTotalSessions) + '分/回';
+            } else {
+                document.getElementById('avgMinutes').textContent = '0分/回';
+            }
+            
             let maxMinutes = 0;
             Object.values(dashboardData.members).forEach(member => {
-                totalMinutes += member.minutes;
                 if (member.minutes > maxMinutes) {
                     maxMinutes = member.minutes;
                 }
             });
-            document.getElementById('totalMinutes').textContent = totalMinutes;
-            if (totalSessions > 0) {
-                document.getElementById('avgMinutes').textContent = Math.round(totalMinutes / totalSessions) + '分/回';
-            } else {
-                document.getElementById('avgMinutes').textContent = '0分/回';
-            }
             document.getElementById('maxMinutes').textContent = maxMinutes + '分';
             
-            // 月間達成度の更新
-            const monthlyGoal = 80;
-            const monthlyRate = Math.min(Math.round((totalSessions / monthlyGoal) * 100), 100);
-            const remainingSessions = Math.max(monthlyGoal - totalSessions, 0);
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
             
-            document.getElementById('monthlyRate').textContent = monthlyRate + '%';
-            document.getElementById('monthlyProgress').style.width = monthlyRate + '%';
-            document.getElementById('monthlyProgress').textContent = `${totalSessions}/${monthlyGoal} セッション`;
+            let monthlyTotalSessions = 0;
+            
+            if (dashboardData.sessionDetails) {
+                dashboardData.sessionDetails.forEach(session => {
+                    const sessionDate = new Date(session.timestamp);
+                    if (sessionDate.getMonth() === currentMonth && sessionDate.getFullYear() === currentYear) {
+                        monthlyTotalSessions++;
+                    }
+                });
+            }
+            
+            const monthlyGoal = 80;
+            const monthlyRate = (monthlyTotalSessions / monthlyGoal) * 100;
+            const remainingSessions = Math.max(monthlyGoal - monthlyTotalSessions, 0);
+            
+            document.getElementById('monthlyRate').textContent = monthlyRate.toFixed(2) + '%';
+            document.getElementById('monthlyProgress').style.width = Math.min(monthlyRate, 100) + '%';
+            document.getElementById('monthlyProgress').textContent = `${monthlyTotalSessions}/${monthlyGoal} セッション`;
             document.getElementById('monthlyRemaining').textContent = `残り: ${remainingSessions}セッション`;
             
-            // 効果測定の平均値を更新
             if (dataCount > 0) {
                 document.getElementById('stressScore').textContent = (totalStress / dataCount).toFixed(1);
                 document.getElementById('focusScore').textContent = (totalFocus / dataCount).toFixed(1);
@@ -1162,17 +1145,18 @@
                 document.getElementById('moodScore').textContent = '0.0';
             }
             
-            // メンバー別進捗UIを更新
             updateMemberDisplay();
         }
         
-        // メンバー別進捗の表示を更新
         function updateMemberDisplay() {
             const membersList = document.getElementById('teamMembersList');
             membersList.innerHTML = '';
             
             Object.entries(dashboardData.members).forEach(([name, data]) => {
-                const progressPercent = Math.round((data.sessions / 5) * 100);
+                const weeklySessions = data.weeklySessions || 0;
+                const totalMinutes = data.minutes || 0;
+                
+                const progressPercent = Math.round((weeklySessions / 5) * 100);
                 const badge = progressPercent >= 100 ? 
                     '<span class="badge badge-success">優秀</span>' : 
                     (progressPercent < 50 ? '<span class="badge badge-warning">要サポート</span>' : '');
@@ -1186,7 +1170,7 @@
                             ${name}
                             ${badge}
                         </div>
-                        <div class="member-stats">今週: ${data.sessions}/5回 | 合計: ${data.minutes}分</div>
+                        <div class="member-stats">今週: ${weeklySessions}/5回 | 合計: ${totalMinutes}分</div>
                     </div>
                     <div class="member-progress">
                         <div class="member-progress-fill" style="width: ${Math.min(progressPercent, 100)}%"></div>
@@ -1196,15 +1180,12 @@
             });
         }
 
-        // グラフ更新関数
         function updateCharts() {
-            // 週次推移グラフの最大値を自動計算
             const maxWeekly = Math.max(...dashboardData.weeklyData, 25);
             weeklyChart.options.scales.y.max = Math.ceil(maxWeekly / 5) * 5 + 5;
             weeklyChart.data.datasets[0].data = dashboardData.weeklyData;
             weeklyChart.update();
             
-            // 効果測定グラフの最大値を自動計算
             const allEffectValues = [
                 ...dashboardData.effectData.stress,
                 ...dashboardData.effectData.focus,
@@ -1221,11 +1202,10 @@
             effectChart.update();
         }
 
-        // データエクスポート機能
         function exportData() {
-            const csvContent = "data:text/csv;charset=utf-8,メンバー,セッション数,合計時間（分）,ストレス合計,集中力合計,睡眠合計,気分合計\n" +
+            const csvContent = "data:text/csv;charset=utf-8,メンバー,今週セッション数,今週合計時間(分),累計セッション数,累計時間(分),ストレス合計,集中力合計,睡眠合計,気分合計\n" +
                 Object.entries(dashboardData.members).map(([name, data]) => 
-                    `${name},${data.sessions},${data.minutes},${data.stressTotal},${data.focusTotal},${data.sleepTotal},${data.moodTotal}`
+                    `${name},${data.weeklySessions || 0},${data.weeklyMinutes || 0},${data.sessions},${data.minutes},${data.stressTotal},${data.focusTotal},${data.sleepTotal},${data.moodTotal}`
                 ).join("\n");
             
             const encodedUri = encodeURI(csvContent);
@@ -1239,10 +1219,8 @@
             alert('データをエクスポートしました');
         }
 
-        // 週のラベルを取得
         const weekLabels = generateWeekLabels();
 
-        // 週次推移グラフ
         const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
         const weeklyChart = new Chart(weeklyCtx, {
             type: 'bar',
@@ -1287,7 +1265,6 @@
             }
         });
 
-        // 効果測定推移グラフ
         const effectCtx = document.getElementById('effectChart').getContext('2d');
         const effectChart = new Chart(effectCtx, {
             type: 'line',
@@ -1372,12 +1349,9 @@
             }
         });
 
-        // ページ読み込み時の初期化
         window.onload = function() {
             updateDashboard();
             updateCharts();
-            
-            // 初回データ読み込み
             loadDataFromSheet();
         };
     </script>
