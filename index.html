@@ -1113,12 +1113,22 @@
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
             
+            // 月間実施率の計算
             let monthlyTotalSessions = 0;
+            
+            // 2025年12月の場合は12/7以降、2026年1月の場合は1/4以降をカウント
+            const monthStartDate = (currentYear === 2025 && currentMonth === 11) 
+                ? new Date(2025, 11, 7)  // 2025年12月7日
+                : (currentYear === 2026 && currentMonth === 0)
+                    ? new Date(2026, 0, 4)  // 2026年1月4日
+                    : new Date(currentYear, currentMonth, 1); // その他の月は1日から
             
             if (dashboardData.sessionDetails) {
                 dashboardData.sessionDetails.forEach(session => {
                     const sessionDate = new Date(session.timestamp);
-                    if (sessionDate.getMonth() === currentMonth && sessionDate.getFullYear() === currentYear) {
+                    if (sessionDate >= monthStartDate && 
+                        sessionDate.getMonth() === currentMonth && 
+                        sessionDate.getFullYear() === currentYear) {
                         monthlyTotalSessions++;
                     }
                 });
@@ -1154,7 +1164,7 @@
             
             Object.entries(dashboardData.members).forEach(([name, data]) => {
                 const weeklySessions = data.weeklySessions || 0;
-                const totalMinutes = data.minutes || 0;
+                const weeklyMinutes = data.weeklyMinutes || 0;
                 
                 const progressPercent = Math.round((weeklySessions / 5) * 100);
                 const badge = progressPercent >= 100 ? 
@@ -1170,7 +1180,7 @@
                             ${name}
                             ${badge}
                         </div>
-                        <div class="member-stats">今週: ${weeklySessions}/5回 | 合計: ${totalMinutes}分</div>
+                        <div class="member-stats">今週: ${weeklySessions}/5回 | 合計: ${weeklyMinutes}分</div>
                     </div>
                     <div class="member-progress">
                         <div class="member-progress-fill" style="width: ${Math.min(progressPercent, 100)}%"></div>
