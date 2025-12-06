@@ -851,15 +851,28 @@
         updateDate();
 
         // 日曜日を週の開始日として週番号を取得（0から始まる）
+        // 2024年12月1日（日曜日）を週0として計算
         function getCurrentWeekNumber() {
             const today = new Date();
-            const startDate = new Date(2024, 11, 1); // 2024年12月1日から開始
+            const startDate = new Date(2024, 11, 1); // 2024年12月1日（日曜日）
             
-            // 今日が日曜日から何週目かを計算
-            const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-            const weeksSinceStart = Math.floor(daysSinceStart / 7);
+            // その週の日曜日を取得する関数
+            function getSunday(date) {
+                const d = new Date(date);
+                const day = d.getDay();
+                const diff = d.getDate() - day; // 日曜日までの日数差
+                return new Date(d.setDate(diff));
+            }
             
-            return weeksSinceStart;
+            const startSunday = getSunday(startDate);
+            const todaySunday = getSunday(today);
+            
+            // 日曜日から日曜日までの週数を計算
+            const diffTime = todaySunday - startSunday;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const weekNumber = Math.floor(diffDays / 7);
+            
+            return weekNumber;
         }
 
         // 週のラベルを生成する関数（日曜始まりの週）
@@ -868,9 +881,16 @@
             const today = new Date();
             const currentWeekIndex = getCurrentWeekNumber();
             
+            // その週の日曜日を取得する関数
+            function getSunday(date) {
+                const d = new Date(date);
+                const day = d.getDay();
+                const diff = d.getDate() - day;
+                return new Date(d.setDate(diff));
+            }
+            
             // 現在の週の日曜日を見つける
-            const currentSunday = new Date(today);
-            currentSunday.setDate(today.getDate() - today.getDay());
+            const currentSunday = getSunday(today);
             
             // 4週前から3週後まで（計8週間）のラベルを生成
             for (let i = -4; i <= 3; i++) {
@@ -1047,7 +1067,7 @@
                 }
             };
 
-            // パラメータを構築
+            // パラメータを構築（週番号は送らない。GAS側で計算）
             const params = new URLSearchParams({
                 action: 'addSession',
                 member: member,
@@ -1056,7 +1076,6 @@
                 focus: focus,
                 sleep: sleep,
                 mood: mood,
-                weekNumber: dashboardData.currentWeek,
                 callback: callbackName
             });
 
