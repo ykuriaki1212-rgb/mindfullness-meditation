@@ -397,7 +397,7 @@
         }
 
         button {
-            padding: 10px 20px;
+            padding: 14px 28px;
             margin: 5px;
             border: none;
             border-radius: 8px;
@@ -406,6 +406,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: opacity 0.3s ease;
+            font-size: 16px;
         }
 
         button:hover {
@@ -636,7 +637,6 @@
             <div class="button-group">
                 <button onclick="addSession()" id="addButton">セッション記録</button>
                 <button onclick="loadDataFromSheet()">データ再読み込み</button>
-                <button onclick="exportData()">データエクスポート</button>
             </div>
         </div>
 
@@ -1199,6 +1199,7 @@
         function updateCharts() {
             const maxWeekly = Math.max(...dashboardData.weeklyData, 25);
             weeklyChart.options.scales.y.max = Math.ceil(maxWeekly / 5) * 5 + 5;
+            weeklyChart.data.labels = weekLabels;
             weeklyChart.data.datasets[0].data = dashboardData.weeklyData;
             weeklyChart.update();
             
@@ -1211,28 +1212,12 @@
             const maxEffect = Math.max(...allEffectValues, 50);
             effectChart.options.scales.y.max = Math.ceil(maxEffect / 10) * 10 + 10;
             
+            effectChart.data.labels = weekLabels;
             effectChart.data.datasets[0].data = dashboardData.effectData.stress;
             effectChart.data.datasets[1].data = dashboardData.effectData.focus;
             effectChart.data.datasets[2].data = dashboardData.effectData.sleep;
             effectChart.data.datasets[3].data = dashboardData.effectData.mood;
             effectChart.update();
-        }
-
-        function exportData() {
-            const csvContent = "data:text/csv;charset=utf-8,メンバー,今週セッション数,今週合計時間(分),累計セッション数,累計時間(分),ストレス合計,集中力合計,睡眠合計,気分合計\n" +
-                Object.entries(dashboardData.members).map(([name, data]) => 
-                    `${name},${data.weeklySessions || 0},${data.weeklyMinutes || 0},${data.sessions},${data.minutes},${data.stressTotal},${data.focusTotal},${data.sleepTotal},${data.moodTotal}`
-                ).join("\n");
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `mindfulness_data_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            alert('データをエクスポートしました');
         }
 
         const weekLabels = generateWeekLabels();
