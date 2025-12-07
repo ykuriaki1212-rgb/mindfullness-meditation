@@ -921,27 +921,17 @@
             const callbackName = 'jsonpCallback_' + Date.now();
             
             window[callbackName] = function(result) {
-                console.log('APIレスポンス:', result);
                 try {
                     if (result.success) {
-                        console.log('データ読み込み成功');
-                        console.log('Members:', result.members);
-                        console.log('SessionDetails:', result.sessionDetails);
-                        
-                        // データを更新
-                        dashboardData.members = result.members || dashboardData.members;
-                        dashboardData.weeklyData = result.weeklyData || dashboardData.weeklyData;
-                        dashboardData.effectData = result.effectData || dashboardData.effectData;
+                        dashboardData.members = result.members;
+                        dashboardData.weeklyData = result.weeklyData;
+                        dashboardData.effectData = result.effectData;
                         
                         if (result.sessionDetails) {
                             dashboardData.sessionDetails = result.sessionDetails;
-                            console.log('今週のデータを再計算します');
                             calculateWeeklyData();
-                        } else {
-                            console.warn('sessionDetailsが返されませんでした');
                         }
 
-                        console.log('ダッシュボードを更新します');
                         updateDashboard();
                         updateCharts();
 
@@ -951,9 +941,8 @@
                     }
                 } catch (error) {
                     console.error('データ読み込みエラー:', error);
-                    console.error('エラースタック:', error.stack);
                     showSaveStatus('⚠️ 読み込み失敗', '#fed7d7', '#742a2a');
-                    alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message + '\n\nブラウザのコンソール(F12)を開いて詳細を確認してください。');
+                    alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message);
                 } finally {
                     delete window[callbackName];
                     document.body.removeChild(script);
@@ -981,16 +970,14 @@
                 dashboardData.members[memberName].weeklyMinutes = 0;
             });
             
-            if (dashboardData.sessionDetails && dashboardData.sessionDetails.length > 0) {
-                dashboardData.sessionDetails.forEach(session => {
-                    const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
-                    
-                    if (sessionWeek === currentWeek && dashboardData.members[session.member]) {
-                        dashboardData.members[session.member].weeklySessions++;
-                        dashboardData.members[session.member].weeklyMinutes += session.minutes;
-                    }
-                });
-            }
+            dashboardData.sessionDetails.forEach(session => {
+                const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
+                
+                if (sessionWeek === currentWeek && dashboardData.members[session.member]) {
+                    dashboardData.members[session.member].weeklySessions++;
+                    dashboardData.members[session.member].weeklyMinutes += session.minutes;
+                }
+            });
         }
 
         function addSession() {
@@ -1114,19 +1101,18 @@
                 document.getElementById('avgMinutes').textContent = '0分/回';
             }
             
-            // 今週の最長記録を計算(今週分のセッションから最大値を取得)
+            // 今週実施した記録の中での最長時間を取得
             let maxMinutes = 0;
-            const currentWeek = getCurrentWeekNumber();
-            
             if (dashboardData.sessionDetails) {
                 dashboardData.sessionDetails.forEach(session => {
                     const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
-                    if (sessionWeek === currentWeek && session.minutes > maxMinutes) {
-                        maxMinutes = session.minutes;
+                    if (sessionWeek === currentWeek) {
+                        if (session.minutes > maxMinutes) {
+                            maxMinutes = session.minutes;
+                        }
                     }
                 });
             }
-            
             document.getElementById('maxMinutes').textContent = maxMinutes + '分';
             
             const today = new Date();
