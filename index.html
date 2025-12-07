@@ -1101,12 +1101,19 @@
                 document.getElementById('avgMinutes').textContent = '0分/回';
             }
             
+            // 今週の最長記録を計算(今週分のセッションから最大値を取得)
             let maxMinutes = 0;
-            Object.values(dashboardData.members).forEach(member => {
-                if (member.minutes > maxMinutes) {
-                    maxMinutes = member.minutes;
-                }
-            });
+            const currentWeek = getCurrentWeekNumber();
+            
+            if (dashboardData.sessionDetails) {
+                dashboardData.sessionDetails.forEach(session => {
+                    const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
+                    if (sessionWeek === currentWeek && session.minutes > maxMinutes) {
+                        maxMinutes = session.minutes;
+                    }
+                });
+            }
+            
             document.getElementById('maxMinutes').textContent = maxMinutes + '分';
             
             const today = new Date();
