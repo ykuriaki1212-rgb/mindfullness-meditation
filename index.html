@@ -921,17 +921,27 @@
             const callbackName = 'jsonpCallback_' + Date.now();
             
             window[callbackName] = function(result) {
+                console.log('APIレスポンス:', result);
                 try {
                     if (result.success) {
-                        dashboardData.members = result.members;
-                        dashboardData.weeklyData = result.weeklyData;
-                        dashboardData.effectData = result.effectData;
+                        console.log('データ読み込み成功');
+                        console.log('Members:', result.members);
+                        console.log('SessionDetails:', result.sessionDetails);
+                        
+                        // データを更新
+                        dashboardData.members = result.members || dashboardData.members;
+                        dashboardData.weeklyData = result.weeklyData || dashboardData.weeklyData;
+                        dashboardData.effectData = result.effectData || dashboardData.effectData;
                         
                         if (result.sessionDetails) {
                             dashboardData.sessionDetails = result.sessionDetails;
+                            console.log('今週のデータを再計算します');
                             calculateWeeklyData();
+                        } else {
+                            console.warn('sessionDetailsが返されませんでした');
                         }
 
+                        console.log('ダッシュボードを更新します');
                         updateDashboard();
                         updateCharts();
 
@@ -941,8 +951,9 @@
                     }
                 } catch (error) {
                     console.error('データ読み込みエラー:', error);
+                    console.error('エラースタック:', error.stack);
                     showSaveStatus('⚠️ 読み込み失敗', '#fed7d7', '#742a2a');
-                    alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message);
+                    alert('データの読み込みに失敗しました。\n\n詳細: ' + error.message + '\n\nブラウザのコンソール(F12)を開いて詳細を確認してください。');
                 } finally {
                     delete window[callbackName];
                     document.body.removeChild(script);
@@ -970,14 +981,16 @@
                 dashboardData.members[memberName].weeklyMinutes = 0;
             });
             
-            dashboardData.sessionDetails.forEach(session => {
-                const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
-                
-                if (sessionWeek === currentWeek && dashboardData.members[session.member]) {
-                    dashboardData.members[session.member].weeklySessions++;
-                    dashboardData.members[session.member].weeklyMinutes += session.minutes;
-                }
-            });
+            if (dashboardData.sessionDetails && dashboardData.sessionDetails.length > 0) {
+                dashboardData.sessionDetails.forEach(session => {
+                    const sessionWeek = calculateWeekNumber(new Date(session.timestamp));
+                    
+                    if (sessionWeek === currentWeek && dashboardData.members[session.member]) {
+                        dashboardData.members[session.member].weeklySessions++;
+                        dashboardData.members[session.member].weeklyMinutes += session.minutes;
+                    }
+                });
+            }
         }
 
         function addSession() {
